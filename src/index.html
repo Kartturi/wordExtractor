@@ -1,0 +1,149 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Put a word</h1>
+    <form  class="tatoeba-form">
+        <input type="text" name="word" class="input">
+        <input type="submit">
+    </form>
+
+    <button class="go-nuts">Go nuts</button>
+
+    <table border="1" class="content">
+        
+    </table>
+
+    <script>
+        
+    let form = document.querySelector(".tatoeba-form");
+    let content = document.querySelector(".content");
+    let input = document.querySelector(".input");
+
+    let goNuts = document.querySelector(".go-nuts");
+    
+    let nounArr = ["Tisch", "Bett", "Frau"];
+
+    goNuts.addEventListener("click", (e) => {
+        getData(e);
+        //fetchList(e, nounArr);
+    });
+
+    function getData(e) {
+         fetch("/parse")
+            .then(response => {
+                
+                return response.json();
+            })
+            .then(result => {
+                console.log(result.Sheet7[0].word);
+                let filteredList = result.Sheet7.map(item => {
+                    return item.word;
+                })
+
+                return filteredList;
+                
+            })
+            .then(result => {
+                let nouns = result;
+                fetchList(e, nouns);
+            })
+            .catch(err => console.log(err));
+    }
+    function fetchList(e, arr) {
+        
+        e.preventDefault();
+        if(arr.length === 0) return
+        let current = arr[0]
+        let loading = document.createElement("h4")
+        let text = "loading";
+        loading.append(text);
+        document.body.append(loading);
+        fetch(`/search?word=${current}`)
+        .then(function(response) {
+            return response.json()
+            
+        })
+        .then(result => {
+            console.log(result);
+            addRow(result);
+            document.querySelector("h4").remove();
+            arr.shift();
+            return fetchList(e, arr);
+        })
+        
+        .catch(err => {
+            addRow(err);
+            arr.shift();
+            return fetchList(e, arr);
+
+        });
+        input.value = "";
+    }
+
+    
+    
+    form.addEventListener("submit", (e)=> {
+        e.preventDefault();
+        let loading = document.createElement("h4")
+        let text = "loading";
+        loading.append(text);
+        document.body.append(loading);
+        fetch(`/search?word=${input.value}`)
+        .then(function(response) {
+            return response.json()
+            
+        })
+        .then(result => {
+            console.log(result);
+            addRow(result);
+            document.querySelector("h4").remove();
+        })
+        
+        .catch(err => console.log(err));
+        input.value = "";
+    })
+
+    
+    function addRow(text){
+        const table = document.querySelector(".content");
+        let row = table.insertRow(0);
+        
+        
+        let ger = document.createTextNode(text.sentence1);
+        let en = document.createTextNode(text.sentence2);
+        let word = document.createTextNode(text.word)
+        let plural = document.createTextNode(text.plural)
+        let gender = document.createTextNode(text.gender)
+        let translation = document.createTextNode(text.translation)
+        let author = document.createTextNode(text.author)
+
+        
+        let cell1 = row.insertCell();
+        let cell2 = row.insertCell();
+        let cell3 = row.insertCell();
+        let cell4 = row.insertCell();
+        let emptyCell1 = row.insertCell()
+        let emptyCell2 = row.insertCell()
+        let cell5 = row.insertCell();
+        let cell6 = row.insertCell();
+        let cell7 = row.insertCell();
+
+        cell1.innerHTML = text.gender;
+        cell2.innerHTML = text.word;
+        cell3.innerHTML = text.plural;
+        cell4.innerHTML = text.translation;
+        emptyCell1.innerHTML = " "
+        emptyCell2.innerHTML = " "
+        cell5.innerHTML = text.sentence1;
+        cell6.innerHTML = text.author;
+        cell7.innerHTML = text.sentence2;
+    }
+    
+    </script>
+</body>
+</html>
